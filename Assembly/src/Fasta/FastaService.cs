@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Assembly
+namespace Assembly.Fasta
 {
     public class FastaService
     {
@@ -34,6 +34,11 @@ namespace Assembly
             }
 
             appendSequenceIfNotEmpty(header, ref sequence);
+
+            if (_fastaSequences.Count == 0)
+            {
+                throw new ArgumentException("No fasta sequences in file.");
+            }
 
             return _fastaSequences;
         }
