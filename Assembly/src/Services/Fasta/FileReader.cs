@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Assembly.Fasta
+namespace Assembly.Services
 {
     public class FileReader : IFileReader
     {

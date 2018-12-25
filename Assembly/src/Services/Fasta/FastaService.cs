@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Assembly.Models;
 
-namespace Assembly.Fasta
+namespace Assembly.Services
+
 {
     public class FastaService
     {

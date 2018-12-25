@@ -1,4 +1,4 @@
-namespace Assembly.Fasta
+namespace Assembly.Models
 {
     public class FastaSequence
     {
