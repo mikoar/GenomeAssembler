@@ -4,11 +4,11 @@ namespace Assembly.Models
     {
         public KMer(string kmer)
         {
-            Kmer = kmer;
+            _kmer = kmer;
         }
 
-        public string Kmer { get; set; }
-        public string LeftMer { get => Kmer.Substring(0, Kmer.Length - 1); }
-        public string RigthMer { get => Kmer.Substring(1); }
+        private string _kmer;
+        public Node LeftKMinus1Mer { get => new Node(_kmer.Substring(0, _kmer.Length - 1)); }
+        public Node RigthKMinus1Mer { get => new Node(_kmer.Substring(1)); }
     }
 }

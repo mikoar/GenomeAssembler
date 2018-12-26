@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Assembly.Services;
 using Xunit;
 
@@ -13,10 +14,10 @@ namespace Assembly.Tests
             var fileReader = new TestFileReader();
             var fastaService = new FastaService(fileReader);
 
-            var sequences = fastaService.ParseFastaFile("path");
+            var sequences = fastaService.ParseFastaFile("path").ToList();
 
             Assert.Equal(10, sequences.Count);
-            Assert.All(sequences, s => Assert.Equal(80, s.Sequece.Length));
+            Assert.All(sequences, s => Assert.Equal(80, s.Length));
         }
 
         [Fact]
@@ -27,7 +28,7 @@ namespace Assembly.Tests
             var fastaService = new FastaService(fileReader);
 
             Assert.Throws<ArgumentException>(() =>
-                fastaService.ParseFastaFile("path"));
+                fastaService.ParseFastaFile("path").ToList());
 
         }
 
@@ -44,7 +45,7 @@ namespace Assembly.Tests
             var fastaService = new FastaService(fileReader);
 
             Assert.Throws<ArgumentException>(() =>
-                fastaService.ParseFastaFile("path"));
+                fastaService.ParseFastaFile("path").ToList());
 
         }
     }

@@ -8,7 +8,7 @@ namespace Assembly.Services
 {
     public class FastaService
     {
-        private readonly List<FastaSequence> _fastaSequences = new List<FastaSequence>();
+        public int Count { get; private set; }
         private readonly IFileReader _fileReader;
 
         public FastaService(IFileReader fileReader)
@@ -16,18 +16,23 @@ namespace Assembly.Services
             _fileReader = fileReader;
         }
 
-        public List<FastaSequence> ParseFastaFile(string filePath)
+        public IEnumerable<string> ParseFastaFile(string filePath)
         {
-            var header = string.Empty;
             var sequence = string.Empty;
+            var headerRead = false;
 
             foreach (var line in _fileReader.ReadLines(filePath))
             {
                 if (line.StartsWith('>'))
                 {
-                    appendSequenceIfNotEmpty(header, ref sequence);
+                    headerRead = true;
+                    if (!string.IsNullOrEmpty(sequence))
+                    {
+                        Count += 1;
 
-                    header = line.Substring(1).Trim();
+                        yield return sequence;
+                        sequence = string.Empty;
+                    }
                 }
                 else
                 {
@@ -35,22 +40,15 @@ namespace Assembly.Services
                 }
             }
 
-            appendSequenceIfNotEmpty(header, ref sequence);
-
-            if (_fastaSequences.Count == 0)
+            if (headerRead && !string.IsNullOrEmpty(sequence))
             {
-                throw new ArgumentException("No fasta sequences in file.");
+                Count += 1;
+                yield return sequence;
             }
 
-            return _fastaSequences;
-        }
-
-        private void appendSequenceIfNotEmpty(string header, ref string sequence)
-        {
-            if (!string.IsNullOrEmpty(header) && !string.IsNullOrEmpty(sequence))
+            if (Count == 0)
             {
-                _fastaSequences.Add(new FastaSequence(header, sequence));
-                sequence = string.Empty;
+                throw new ArgumentException("No fasta sequences in file.");
             }
         }
     }
