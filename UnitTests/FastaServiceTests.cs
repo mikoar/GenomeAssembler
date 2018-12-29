@@ -4,14 +4,14 @@ using System.Linq;
 using Assembly.Services;
 using Xunit;
 
-namespace Assembly.Tests
+namespace Assembly.UnitTests
 {
     public class FastaServiceTests
     {
         [Fact]
         public void ParseFastaFile_ReturnsCorrectSequences()
         {
-            var fileReader = new TestFileReader();
+            var fileReader = new TestFileService();
             var fastaService = new FastaService(fileReader);
 
             var sequences = fastaService.ParseFastaFile("path").ToList();
@@ -23,7 +23,7 @@ namespace Assembly.Tests
         [Fact]
         public void ParseFastaFile_EmptyFile_ThrowsArgumentException()
         {
-            var fileReader = new TestFileReader();
+            var fileReader = new TestFileService();
             fileReader.fileLines = new List<string>();
             var fastaService = new FastaService(fileReader);
 
@@ -35,7 +35,7 @@ namespace Assembly.Tests
         [Fact]
         public void ParseFastaFile_NoSequencesInFile_ThrowsArgumentException()
         {
-            var fileReader = new TestFileReader();
+            var fileReader = new TestFileService();
             fileReader.fileLines = new List<string>()
             {
                 "this is definitely not a fasta file",

@@ -6,7 +6,7 @@ using Assembly.Models;
 using Assembly.Services;
 using Xunit;
 
-namespace Assembly.Tests
+namespace Assembly.UnitTests
 {
     public class ErrorCorrectorTests
 
@@ -14,7 +14,7 @@ namespace Assembly.Tests
         [Fact]
         public void GenerateNeighbors()
         {
-            var corrector = new ErrorCorrector(3, new char[] { 'A', 'T', 'G', 'C' });
+            var corrector = new ErrorCorrector(3);
 
             var neighbors = corrector.GenerateNeighbors("CAT").ToHashSet();
 
@@ -43,7 +43,7 @@ namespace Assembly.Tests
                 string.Join("", Enumerable.Repeat("CAT", 10))
             };
 
-            var histogram = corrector.Histogram(reads);
+            var histogram = corrector.BuildHistogram(reads);
 
             var expected = new Dictionary<string, int>
                 { { "ATC", 9 },
@@ -65,7 +65,7 @@ namespace Assembly.Tests
 
             };
 
-            var histogram = corrector.Histogram(reads);
+            var histogram = corrector.BuildHistogram(reads);
 
             var corrected = corrector.Correct(reads, histogram, 5).ToList();
 
@@ -75,28 +75,8 @@ namespace Assembly.Tests
             };
 
             Assert.Equal(expected, corrected);
-            Assert.Equal(3, corrector.NumberOfCorrections);
+            Assert.Equal(3, corrector.CorrectedKmersCount);
         }
 
-        [Fact(Skip = "requires file with reads")]
-        public void Correct_RealData_BelieveItWorks()
-        {
-            var corrector = new ErrorCorrector(6);
-            var fastaService = new FastaService(new FileReader());
-            Console.WriteLine("Enter .fasta file path");
-            var path = Console.ReadLine();
-
-            var histogram = corrector.Histogram(fastaService.ParseFastaFile(path));
-            var kmerCounts = histogram.Values.Distinct().OrderBy(i => i).ToArray();
-
-            var distinctKmersWithGivenCount = new int[kmerCounts.Length];
-
-            for (int i = 0; i < kmerCounts.Length; i++)
-            {
-                distinctKmersWithGivenCount[i] = histogram.Values.Count(v => v == kmerCounts[i]);
-            }
-
-            var corrected = corrector.Correct(fastaService.ParseFastaFile(path), histogram, 5).ToList();
-        }
     }
 }

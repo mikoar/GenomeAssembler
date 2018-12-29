@@ -8,7 +8,7 @@ namespace Assembly.Tests
     public class NodeTests
     {
         [Fact]
-        public void AddNeighbor_IncrementsCostForRepeatedKmers()
+        public void AddNeighbor_IncrementsWeightForRepeatedKmers()
         {
             var node1 = new Node("ABB");
             var node2 = new Node("BBA");
@@ -24,10 +24,10 @@ namespace Assembly.Tests
             Assert.Contains(node4, node1.Neighbors);
 
             Assert.Equal(2, node1.Neighbors.Count);
-            Assert.Equal(2, node1.Costs[0]);
-            Assert.Equal(2, node1.Neighbors[0].TotalIncomingCost);
-            Assert.Equal(1, node1.Neighbors[1].TotalIncomingCost);
-            Assert.Equal(3, node1.TotalOutcomingCost);
+            Assert.Equal(2, node1.Weights[0]);
+            Assert.Equal(2, node1.Neighbors[0].TotalIncomingWeight);
+            Assert.Equal(1, node1.Neighbors[1].TotalIncomingWeight);
+            Assert.Equal(3, node1.TotalOutcomingWeight);
         }
 
     }

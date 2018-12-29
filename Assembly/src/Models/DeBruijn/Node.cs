@@ -14,36 +14,36 @@ namespace Assembly.Models
 
         public string KMinus1Mer { get; set; }
         public List<Node> Neighbors { get; private set; } = new List<Node>();
-        public List<int> Costs { get; private set; } = new List<int>();
-        public int TotalOutcomingCost { get; private set; } = 0;
-        public int TotalIncomingCost { get; private set; } = 0;
+        public List<int> Weights { get; private set; } = new List<int>();
+        public int TotalOutcomingWeight { get; private set; } = 0;
+        public int TotalIncomingWeight { get; private set; } = 0;
 
         public void AddNeighbor(Node to)
         {
             if (Neighbors.Contains(to))
             {
                 var index = Neighbors.FindIndex(n => n.Equals(to));
-                Costs[index] += 1;
+                Weights[index] += 1;
                 Neighbors[index].IncrementIncomingEdgesCount();
             }
             else
             {
                 to.IncrementIncomingEdgesCount();
                 Neighbors.Add(to);
-                Costs.Add(1);
+                Weights.Add(1);
             }
 
             IncrementOutcomingEdgesCount();
         }
 
         public void IncrementIncomingEdgesCount() =>
-            TotalIncomingCost += 1;
+            TotalIncomingWeight += 1;
 
         public bool IsSemiBalanced() =>
-            Math.Abs(TotalIncomingCost - TotalOutcomingCost) == 1;
+            Math.Abs(TotalIncomingWeight - TotalOutcomingWeight) == 1;
 
         public bool IsBalanced() =>
-            TotalIncomingCost == TotalOutcomingCost;
+            TotalIncomingWeight == TotalOutcomingWeight;
 
         public override string ToString()
         {
@@ -62,6 +62,6 @@ namespace Assembly.Models
         }
 
         private void IncrementOutcomingEdgesCount() =>
-            TotalOutcomingCost += 1;
+            TotalOutcomingWeight += 1;
     }
 }

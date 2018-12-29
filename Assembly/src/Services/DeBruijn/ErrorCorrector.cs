@@ -10,13 +10,8 @@ namespace Assembly.Services
 
         public int KmerLength { get; private set; }
         public char[] Alphabet { get; private set; }
-        public int NumberOfCorrections { get; private set; }
-
-        public ErrorCorrector(int kmerLength, char[] alphabet)
-        {
-            KmerLength = kmerLength;
-            Alphabet = alphabet;
-        }
+        public int CorrectedKmersCount { get; private set; }
+        public int FailedToCorrectKmersCount { get; private set; }
 
         public ErrorCorrector(int kmerLength = 6)
         {
@@ -30,12 +25,18 @@ namespace Assembly.Services
             };
         }
 
+        public ErrorCorrector(char[] alphabet, int kmerLength = 6)
+        {
+            KmerLength = kmerLength;
+            Alphabet = alphabet;
+        }
+
         public IEnumerable<string> GenerateNeighbors(string kmer)
         {
             char oldChar;
             char[] newKmer = kmer.ToCharArray();
 
-            for (int i = 0; i < kmer.Length; i++)
+            for (int i = kmer.Length - 1; i >= 0; i--)
             {
                 oldChar = kmer[i];
                 foreach (var newChar in Alphabet.Where(c => c != oldChar))
@@ -48,10 +49,12 @@ namespace Assembly.Services
             }
         }
 
-        public Dictionary<string, int> Histogram(IEnumerable<string> reads)
+        public Dictionary<string, int> BuildHistogram(IEnumerable<string> reads)
         {
             var histogram = new Dictionary<string, int>();
             string kmer;
+
+            Console.WriteLine($"Building histogram of { KmerLength }-mers...");
 
             foreach (var read in reads)
             {
@@ -66,6 +69,8 @@ namespace Assembly.Services
                 }
             }
 
+            Console.WriteLine($"Generated histogram with { histogram.Count } distinct { KmerLength }-mers.");
+
             return histogram;
         }
 
@@ -75,7 +80,8 @@ namespace Assembly.Services
             string correctedRead;
             int frequency;
             var sb = new StringBuilder();
-            NumberOfCorrections = 0;
+            bool newKmerFound;
+            CorrectedKmersCount = 0;
 
             foreach (var read in reads)
             {
@@ -87,6 +93,8 @@ namespace Assembly.Services
 
                     if (!histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
                     {
+                        newKmerFound = false;
+
                         foreach (var newKmer in GenerateNeighbors(kmer))
                         {
                             if (histogram.TryGetValue(newKmer, out frequency) &&
@@ -94,14 +102,33 @@ namespace Assembly.Services
                             {
                                 correctedRead = sb.Append(correctedRead.Substring(0, i)).Append(newKmer).Append(correctedRead.Substring(i + KmerLength)).ToString();
                                 sb.Clear();
-                                NumberOfCorrections += 1;
+                                newKmerFound = true;
                                 break;
                             }
                         }
+
+                        IncrementCounter(newKmerFound);
                     }
                 }
 
                 yield return correctedRead;
+            }
+        }
+
+        public void PrintResult()
+        {
+            Console.WriteLine($"{KmerLength}-mers corrected: {CorrectedKmersCount}, failed to correct: {FailedToCorrectKmersCount}.");
+        }
+
+        private void IncrementCounter(bool newKmerFound)
+        {
+            if (newKmerFound)
+            {
+                CorrectedKmersCount += 1;
+            }
+            else
+            {
+                FailedToCorrectKmersCount += 1;
             }
         }
     }

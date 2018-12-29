@@ -9,9 +9,9 @@ namespace Assembly.Services
     public class FastaService
     {
         public int Count { get; private set; }
-        private readonly IFileReader _fileReader;
+        private readonly IFileService _fileReader;
 
-        public FastaService(IFileReader fileReader)
+        public FastaService(IFileService fileReader)
         {
             _fileReader = fileReader;
         }

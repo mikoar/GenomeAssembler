@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Assembly.Tests
 {
-    public class TestFileReader : IFileReader
+    public class TestFileService : IFileService
     {
         public IEnumerable<string> fileLines = new List<string>()
         {
@@ -35,12 +35,19 @@ namespace Assembly.Tests
             "    "
         };
 
+        public string WrittenText { get; private set; }
+
         public IEnumerable<string> ReadLines(string filePath)
         {
             foreach (var line in fileLines)
             {
                 yield return line;
             }
+        }
+
+        public void WriteAllText(string filePath, string contents)
+        {
+            WrittenText = contents;
         }
     }
 }
