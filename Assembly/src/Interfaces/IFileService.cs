@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 
-public interface IFileService
+namespace Assembly.Services
 {
-    IEnumerable<string> ReadLines(string filePath);
-    void WriteAllText(string filePath, string contents);
+    public interface IFileService
+    {
+        IEnumerable<string> ReadLines(string filePath);
+        void WriteAllText(string filePath, string contents);
+    }
 }

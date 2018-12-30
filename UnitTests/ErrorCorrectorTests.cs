@@ -11,26 +11,16 @@ namespace Assembly.UnitTests
     public class ErrorCorrectorTests
 
     {
-        [Fact]
-        public void GenerateNeighbors()
+        [Theory]
+        [InlineData("CA", 15)]
+        [InlineData("CAT", 36)]
+        public void GenerateNeighbors(string kmer, int count)
         {
             var corrector = new ErrorCorrector(3);
 
-            var neighbors = corrector.GenerateNeighbors("CAT").ToHashSet();
+            var neighbors = corrector.GenerateNeighbors(kmer).ToHashSet();
 
-            var expected = new HashSet<string>
-            {
-                "CAA",
-                "CAC",
-                "CAG",
-                "CCT",
-                "CGT",
-                "CTT",
-                "AAT",
-                "GAT",
-                "TAT"
-            };
-            Assert.Equal(expected, neighbors);
+            Assert.Equal(count, neighbors.Count);
         }
 
         [Fact]
@@ -54,28 +44,29 @@ namespace Assembly.UnitTests
             Assert.Equal(expected, histogram);
         }
 
-        [Fact]
-        public void Correct()
+        [Theory]
+        [InlineData(
+            "CATCGTCATCATGATCATCATCAGCATCATCAT",
+            "CATCATCATCATCATCATCATCATCATCATCAT",
+            3)]
+        [InlineData(
+            "GGTCATCATCATCATCATCATCATCATCATCAT",
+            "CATCATCATCATCATCATCATCATCATCATCAT",
+            1)]
+        public void Correct(string read, string expectedRead, int numberOfErrors)
         {
             var corrector = new ErrorCorrector(3);
 
-            var reads = new List<string>
-            {
-                "CATCGTCATCATGATCATCATCAGCATCATCAT"
-
-            };
+            var reads = new List<string> { read };
+            var expectedReads = new List<string> { expectedRead };
 
             var histogram = corrector.BuildHistogram(reads);
 
-            var corrected = corrector.Correct(reads, histogram, 5).ToList();
+            var expectedKmers = new TestErrorCorrector(3).CorrectReadsAndSplitToKmers(expectedReads, histogram).ToList();
+            var correctedKmers = corrector.CorrectReadsAndSplitToKmers(reads, histogram).ToList();
 
-            var expected = new List<string>
-            {
-                string.Join("", Enumerable.Repeat("CAT", 11))
-            };
-
-            Assert.Equal(expected, corrected);
-            Assert.Equal(3, corrector.CorrectedKmersCount);
+            Assert.Equal(expectedKmers, correctedKmers);
+            Assert.Equal(numberOfErrors, corrector.CorrectedKmersCount);
         }
 
     }

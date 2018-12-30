@@ -14,17 +14,20 @@ namespace Assembly.IntegrationTests
         [Fact]
         public void Correct_RealData()
         {
-            var corrector = new ErrorCorrector(6);
+            var kmerLength = 19;
+            var corrector = new ErrorCorrector(kmerLength);
             var fastaService = new FastaService(new FileService());
             Console.WriteLine("Enter .fasta file path");
             var path = Console.ReadLine();
+            var reads = fastaService.ParseFastaFile(path);
 
-            var histogram = corrector.BuildHistogram(fastaService.ParseFastaFile(path));
+            var histogram = corrector.BuildHistogram(reads);
 
             Console.WriteLine("Before correction");
             WriteLowCountDistinctKmersCount(histogram, 12);
 
-            var histogramCorrected = corrector.BuildHistogram(corrector.Correct(fastaService.ParseFastaFile(path), histogram, 5));
+            var kmersCorrected = corrector.CorrectReadsAndSplitToKmers(reads, histogram);
+            var histogramCorrected = corrector.BuildHistogram(kmersCorrected.Select(k => k.ToString()));
 
             Console.WriteLine("After correction");
             WriteLowCountDistinctKmersCount(histogramCorrected, 12);

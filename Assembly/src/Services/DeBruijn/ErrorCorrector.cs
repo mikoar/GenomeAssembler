@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Assembly.Models;
 
 namespace Assembly.Services
 {
-    public class ErrorCorrector
+    public class ErrorCorrector : IErrorCorrector
     {
 
         public int KmerLength { get; private set; }
@@ -13,7 +14,7 @@ namespace Assembly.Services
         public int CorrectedKmersCount { get; private set; }
         public int FailedToCorrectKmersCount { get; private set; }
 
-        public ErrorCorrector(int kmerLength = 6)
+        public ErrorCorrector(int kmerLength = 19)
         {
             KmerLength = kmerLength;
             Alphabet = new char[]
@@ -25,13 +26,25 @@ namespace Assembly.Services
             };
         }
 
-        public ErrorCorrector(char[] alphabet, int kmerLength = 6)
+        public ErrorCorrector(char[] alphabet, int kmerLength = 19)
         {
             KmerLength = kmerLength;
             Alphabet = alphabet;
         }
 
         public IEnumerable<string> GenerateNeighbors(string kmer)
+        {
+            foreach (var neighbor in Distance1Neighbors(kmer))
+            {
+                yield return neighbor;
+            }
+            foreach (var neighbor in Distance2Neighbors(kmer))
+            {
+                yield return neighbor;
+            }
+        }
+
+        private IEnumerable<string> Distance1Neighbors(string kmer)
         {
             char oldChar;
             char[] newKmer = kmer.ToCharArray();
@@ -46,6 +59,40 @@ namespace Assembly.Services
                 }
 
                 newKmer[i] = oldChar;
+            }
+        }
+
+        private IEnumerable<string> Distance2Neighbors(string kmer)
+        {
+            char oldChar1, oldChar2;
+            char[] newKmer = kmer.ToCharArray();
+
+            for (int j = kmer.Length - 1; j >= 0; j--)
+            {
+                oldChar1 = kmer[j];
+                foreach (var newChar1 in Alphabet.Where(c => c != oldChar1))
+                {
+                    newKmer[j] = newChar1;
+
+                    for (int i = kmer.Length - 1; i >= 0; i--)
+                    {
+                        if (i == j)
+                        {
+                            continue;
+                        }
+
+                        oldChar2 = kmer[i];
+                        foreach (var newChar2 in Alphabet.Where(c => c != oldChar2))
+                        {
+                            newKmer[i] = newChar2;
+                            yield return new string(newKmer);
+                        }
+
+                        newKmer[i] = oldChar2;
+                    }
+                }
+
+                newKmer[j] = oldChar1;
             }
         }
 
@@ -74,22 +121,22 @@ namespace Assembly.Services
             return histogram;
         }
 
-        public IEnumerable<string> Correct(IEnumerable<string> reads, Dictionary<string, int> histogram, int threshold = 4)
+        public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, Dictionary<string, int> histogram, int threshold = 1)
         {
             string kmer;
-            string correctedRead;
+            var correctedRead = new StringBuilder();
             int frequency;
-            var sb = new StringBuilder();
             bool newKmerFound;
             CorrectedKmersCount = 0;
+            FailedToCorrectKmersCount = 0;
 
             foreach (var read in reads)
             {
-                correctedRead = read;
+                correctedRead.Clear().Append(read);
 
                 for (int i = 0; i <= correctedRead.Length - KmerLength; i++)
                 {
-                    kmer = correctedRead.Substring(i, KmerLength);
+                    kmer = correctedRead.ToString(i, KmerLength);
 
                     if (!histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
                     {
@@ -100,36 +147,30 @@ namespace Assembly.Services
                             if (histogram.TryGetValue(newKmer, out frequency) &&
                                 frequency > threshold)
                             {
-                                correctedRead = sb.Append(correctedRead.Substring(0, i)).Append(newKmer).Append(correctedRead.Substring(i + KmerLength)).ToString();
-                                sb.Clear();
                                 newKmerFound = true;
+                                CorrectedKmersCount += 1;
+                                correctedRead.Remove(i, KmerLength).Insert(i, newKmer);
+                                yield return new KMer(newKmer);
                                 break;
                             }
                         }
 
-                        IncrementCounter(newKmerFound);
+                        if (!newKmerFound)
+                        {
+                            FailedToCorrectKmersCount += 1;
+                        }
+                    }
+                    else
+                    {
+                        yield return new KMer(kmer);
                     }
                 }
-
-                yield return correctedRead;
             }
         }
 
         public void PrintResult()
         {
             Console.WriteLine($"{KmerLength}-mers corrected: {CorrectedKmersCount}, failed to correct: {FailedToCorrectKmersCount}.");
-        }
-
-        private void IncrementCounter(bool newKmerFound)
-        {
-            if (newKmerFound)
-            {
-                CorrectedKmersCount += 1;
-            }
-            else
-            {
-                FailedToCorrectKmersCount += 1;
-            }
         }
     }
 }

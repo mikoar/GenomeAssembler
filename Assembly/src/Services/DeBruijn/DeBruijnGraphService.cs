@@ -9,42 +9,44 @@ namespace Assembly.Services
     public class DeBruijnGraphService
     {
         private int _kmerLength;
+        private IErrorCorrector _errorCorrector;
+        private Dictionary<string, int> _histogram;
 
-        public DeBruijnGraphService(int kmerLength)
+        public DeBruijnGraphService(int kmerLength, IErrorCorrector errorCorrector, Dictionary<string, int> histogram)
         {
             _kmerLength = kmerLength;
+            _errorCorrector = errorCorrector;
+            _histogram = histogram;
         }
 
         public HashSet<Node> Build(IEnumerable<string> reads)
         {
             var nodes = new HashSet<Node>();
-            int readCount = 0;
+            int kmerCount = 0;
             Node leftKMinus1Mer;
             Node rightKMinus1Mer;
 
             Console.WriteLine($"Building graph...");
 
-            foreach (var read in reads)
+            foreach (var kmer in _errorCorrector.CorrectReadsAndSplitToKmers(reads, _histogram))
             {
-                foreach (var kmer in SplitToKmers(read))
+                leftKMinus1Mer = nodes.FirstOrDefault(n =>
+                        n.Equals(kmer.LeftKMinus1Mer)) ??
+                    kmer.LeftKMinus1Mer;
+
+                rightKMinus1Mer = nodes.FirstOrDefault(n =>
+                        n.Equals(kmer.RigthKMinus1Mer)) ??
+                    kmer.RigthKMinus1Mer;
+
+                leftKMinus1Mer.AddNeighbor(rightKMinus1Mer);
+                nodes.Add(leftKMinus1Mer);
+                nodes.Add(rightKMinus1Mer);
+
+                kmerCount += 1;
+
+                if (kmerCount % 500 == 0)
                 {
-                    leftKMinus1Mer = nodes.FirstOrDefault(n =>
-                            n.Equals(kmer.LeftKMinus1Mer)) ??
-                        kmer.LeftKMinus1Mer;
-
-                    rightKMinus1Mer = nodes.FirstOrDefault(n =>
-                            n.Equals(kmer.RigthKMinus1Mer)) ??
-                        kmer.RigthKMinus1Mer;
-
-                    leftKMinus1Mer.AddNeighbor(rightKMinus1Mer);
-                    nodes.Add(leftKMinus1Mer);
-                    nodes.Add(rightKMinus1Mer);
-                }
-
-                readCount += 1;
-                if (readCount % 100 == 0)
-                {
-                    Console.WriteLine($"Processed { readCount } reads, { nodes.Count } nodes.");
+                    Console.WriteLine($"Processed { kmerCount } kmers, { nodes.Count } nodes.");
                 }
             }
 
@@ -76,14 +78,6 @@ namespace Assembly.Services
 
             fileService.WriteAllText(filePath, content.ToString());
             Console.WriteLine($"Wrote dot file to \"{ filePath }\" ");
-        }
-
-        private IEnumerable<KMer> SplitToKmers(string s)
-        {
-            for (int i = 0; i <= s.Length - _kmerLength; i++)
-            {
-                yield return new KMer(s.Substring(i, _kmerLength));
-            }
         }
 
         private string GetNodeText(Node node, bool hashed)

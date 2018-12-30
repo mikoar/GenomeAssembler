@@ -16,7 +16,8 @@ namespace Assembly.UnitTests
                 "a_long_long_long_time",
             };
 
-            var graph = new DeBruijnGraphService(4).Build(sequences);
+            var graph = new DeBruijnGraphService(4, new TestErrorCorrector(4), new Dictionary<string, int>())
+                .Build(sequences);
 
             Assert.Equal(10, graph.Count);
         }

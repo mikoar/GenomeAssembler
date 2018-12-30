@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Assembly.Services;
 
-namespace Assembly.Tests
+namespace Assembly.UnitTests
 {
     public class TestFileService : IFileService
     {

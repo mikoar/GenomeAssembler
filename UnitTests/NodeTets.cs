@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Assembly.Models;
 using Xunit;
 
-namespace Assembly.Tests
+namespace Assembly.UnitTests
 {
     public class NodeTests
     {

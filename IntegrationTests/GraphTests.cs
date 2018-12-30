@@ -14,20 +14,21 @@ namespace Assembly.IntegrationTests
         public void BuildGraphAndGenerateDotFile_RealData()
         {
             var fileService = new FileService();
-
-            var errorCorrector = new ErrorCorrector();
+            var kmerLength = 19;
+            var errorCorrector = new ErrorCorrector(kmerLength);
             var fastaService = new FastaService(fileService);
             Console.WriteLine("Enter .fasta file path");
             var fastaPath = Console.ReadLine();
+
             var reads = fastaService.ParseFastaFile(fastaPath);
             var histogram = errorCorrector.BuildHistogram(reads);
-            var correctedReads = errorCorrector.Correct(reads, histogram);
+            var correctedKmers = errorCorrector.CorrectReadsAndSplitToKmers(reads, histogram);
 
-            var graphService = new DeBruijnGraphService(20);
-            var graph = graphService.Build(correctedReads);
+            var graphService = new DeBruijnGraphService(kmerLength, errorCorrector, histogram);
+            var graph = graphService.Build(correctedKmers.Select(k => k.ToString()));
             errorCorrector.PrintResult();
 
-            var dotFilePath = Path.Combine(Path.GetDirectoryName(fastaPath), Path.GetFileNameWithoutExtension(fastaPath) + ".dot");
+            var dotFilePath = Path.Combine(Path.GetDirectoryName(fastaPath), "graphs", Path.GetFileNameWithoutExtension(fastaPath) + ".dot");
             graphService.ToDot(fileService, dotFilePath, graph);
         }
     }
