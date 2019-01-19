@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Assembly.Models;
-using Assembly.Services;
+using Assembly.DeBruijn;
 
 namespace Assembly.UnitTests
 {
-    public class TestErrorCorrector : IErrorCorrector
+    internal class TestErrorCorrector : IErrorCorrector
     {
         private int _kmerLength;
 
@@ -15,7 +14,7 @@ namespace Assembly.UnitTests
             _kmerLength = kmerLength;
         }
 
-        public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, Dictionary<string, int> histogram, int threshold = 1)
+        public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, int threshold = 1)
         {
             foreach (var read in reads)
             {

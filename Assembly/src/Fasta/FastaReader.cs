@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Assembly.Models;
 
-namespace Assembly.Services
+
+namespace Assembly.Fasta
 
 {
-    public class FastaService
+    public class FastaReader
     {
         public int Count { get; private set; }
         private readonly IFileService _fileReader;
 
-        public FastaService(IFileService fileReader)
+        public FastaReader(IFileService fileReader)
         {
             _fileReader = fileReader;
         }

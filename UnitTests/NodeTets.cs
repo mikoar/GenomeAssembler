@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Assembly.Models;
+using Assembly.DeBruijn;
 using Xunit;
 
 namespace Assembly.UnitTests

@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Assembly.Models;
-using Assembly.Services;
+using Assembly.DeBruijn;
 using Xunit;
 
 namespace Assembly.UnitTests
@@ -60,10 +59,10 @@ namespace Assembly.UnitTests
             var reads = new List<string> { read };
             var expectedReads = new List<string> { expectedRead };
 
-            var histogram = corrector.BuildHistogram(reads);
+            corrector.BuildHistogram(reads);
 
-            var expectedKmers = new TestErrorCorrector(3).CorrectReadsAndSplitToKmers(expectedReads, histogram).ToList();
-            var correctedKmers = corrector.CorrectReadsAndSplitToKmers(reads, histogram).ToList();
+            var expectedKmers = new TestErrorCorrector(3).CorrectReadsAndSplitToKmers(expectedReads).ToList();
+            var correctedKmers = corrector.CorrectReadsAndSplitToKmers(reads).ToList();
 
             Assert.Equal(expectedKmers, correctedKmers);
             Assert.Equal(numberOfErrors, corrector.CorrectedKmersCount);

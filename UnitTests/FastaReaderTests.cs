@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Assembly.Services;
+using Assembly.Fasta;
 using Xunit;
 
 namespace Assembly.UnitTests
 {
-    public class FastaServiceTests
+    public class FastaReaderTests
     {
         [Fact]
         public void ParseFastaFile_ReturnsCorrectSequences()
         {
             var fileReader = new TestFileService();
-            var fastaService = new FastaService(fileReader);
+            var fastaService = new FastaReader(fileReader);
 
             var sequences = fastaService.ParseFastaFile("path").ToList();
 
@@ -25,7 +25,7 @@ namespace Assembly.UnitTests
         {
             var fileReader = new TestFileService();
             fileReader.fileLines = new List<string>();
-            var fastaService = new FastaService(fileReader);
+            var fastaService = new FastaReader(fileReader);
 
             Assert.Throws<ArgumentException>(() =>
                 fastaService.ParseFastaFile("path").ToList());
@@ -42,7 +42,7 @@ namespace Assembly.UnitTests
                 "ATCGCTGJGJGNVBCACABJP",
                 "dvdfvdf fsdfs dfsdfsgdf"
             };
-            var fastaService = new FastaService(fileReader);
+            var fastaService = new FastaReader(fileReader);
 
             Assert.Throws<ArgumentException>(() =>
                 fastaService.ParseFastaFile("path").ToList());

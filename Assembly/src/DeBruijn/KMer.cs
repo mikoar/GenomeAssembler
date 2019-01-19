@@ -1,4 +1,4 @@
-namespace Assembly.Models
+namespace Assembly.DeBruijn
 {
     public class KMer
     {

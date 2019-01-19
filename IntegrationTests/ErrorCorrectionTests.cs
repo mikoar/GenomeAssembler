@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Assembly.Models;
-using Assembly.Services;
+using Assembly.DeBruijn;
+using Assembly.Fasta;
 using Xunit;
 
 namespace Assembly.IntegrationTests
@@ -16,7 +16,7 @@ namespace Assembly.IntegrationTests
         {
             var kmerLength = 19;
             var corrector = new ErrorCorrector(kmerLength);
-            var fastaService = new FastaService(new FileService());
+            var fastaService = new FastaReader(new FileService());
             Console.WriteLine("Enter .fasta file path");
             var path = Console.ReadLine();
             var reads = fastaService.ParseFastaFile(path);
@@ -26,7 +26,7 @@ namespace Assembly.IntegrationTests
             Console.WriteLine("Before correction");
             WriteLowCountDistinctKmersCount(histogram, 12);
 
-            var kmersCorrected = corrector.CorrectReadsAndSplitToKmers(reads, histogram);
+            var kmersCorrected = corrector.CorrectReadsAndSplitToKmers(reads);
             var histogramCorrected = corrector.BuildHistogram(kmersCorrected.Select(k => k.ToString()));
 
             Console.WriteLine("After correction");

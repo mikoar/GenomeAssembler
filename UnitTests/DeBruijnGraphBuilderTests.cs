@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Assembly.Models;
-using Assembly.Services;
+using Assembly.DeBruijn;
 using Xunit;
 
 namespace Assembly.UnitTests
 {
-    public class DeBruijnGraphServiceTests
+    public class DeBruijnGraphBuilderTests
     {
         [Fact]
         public void Build_SimpleString()
@@ -16,7 +15,7 @@ namespace Assembly.UnitTests
                 "a_long_long_long_time",
             };
 
-            var graph = new DeBruijnGraphService(4, new TestErrorCorrector(4), new Dictionary<string, int>())
+            var graph = new DeBruijnGraphBuilder(4, new TestErrorCorrector(4))
                 .Build(sequences);
 
             Assert.Equal(10, graph.Count);

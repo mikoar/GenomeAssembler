@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Assembly.Models;
+using Assembly.DeBruijn.Exceptions;
 
-namespace Assembly.Services
+namespace Assembly.DeBruijn
 {
     public class ErrorCorrector : IErrorCorrector
     {
@@ -13,6 +13,7 @@ namespace Assembly.Services
         public char[] Alphabet { get; private set; }
         public int CorrectedKmersCount { get; private set; }
         public int FailedToCorrectKmersCount { get; private set; }
+        public Dictionary<string, int> Histogram { get; private set; }
 
         public ErrorCorrector(int kmerLength = 19)
         {
@@ -98,7 +99,7 @@ namespace Assembly.Services
 
         public Dictionary<string, int> BuildHistogram(IEnumerable<string> reads)
         {
-            var histogram = new Dictionary<string, int>();
+            Histogram = new Dictionary<string, int>();
             string kmer;
 
             Console.WriteLine($"Building histogram of { KmerLength }-mers...");
@@ -109,20 +110,25 @@ namespace Assembly.Services
                 {
                     kmer = read.Substring(i, KmerLength);
 
-                    if (!histogram.TryAdd(kmer, 1))
+                    if (!Histogram.TryAdd(kmer, 1))
                     {
-                        histogram[kmer] += 1;
+                        Histogram[kmer] += 1;
                     }
                 }
             }
 
-            Console.WriteLine($"Generated histogram with { histogram.Count } distinct { KmerLength }-mers.");
+            Console.WriteLine($"Generated histogram with { Histogram.Count } distinct { KmerLength }-mers.");
 
-            return histogram;
+            return Histogram;
         }
 
-        public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, Dictionary<string, int> histogram, int threshold = 1)
+        public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, int threshold = 1)
         {
+            if (Histogram == null)
+            {
+                throw new GraphException("Histogram not built");
+            }
+
             string kmer;
             var correctedRead = new StringBuilder();
             int frequency;
@@ -138,13 +144,13 @@ namespace Assembly.Services
                 {
                     kmer = correctedRead.ToString(i, KmerLength);
 
-                    if (!histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
+                    if (!Histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
                     {
                         newKmerFound = false;
 
                         foreach (var newKmer in GenerateNeighbors(kmer))
                         {
-                            if (histogram.TryGetValue(newKmer, out frequency) &&
+                            if (Histogram.TryGetValue(newKmer, out frequency) &&
                                 frequency > threshold)
                             {
                                 newKmerFound = true;

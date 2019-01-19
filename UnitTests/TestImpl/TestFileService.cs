@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Assembly.Services;
+using Assembly.Fasta;
 
 namespace Assembly.UnitTests
 {
-    public class TestFileService : IFileService
+    internal class TestFileService : IFileService
     {
         public IEnumerable<string> fileLines = new List<string>()
         {

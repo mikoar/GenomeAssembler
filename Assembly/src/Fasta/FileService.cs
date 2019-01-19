@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Assembly.Services
+namespace Assembly.Fasta
 {
     public class FileService : IFileService
     {

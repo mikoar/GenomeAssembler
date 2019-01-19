@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Assembly.Services
+namespace Assembly.Fasta
 {
     public interface IFileService
     {
