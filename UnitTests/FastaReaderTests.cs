@@ -12,9 +12,9 @@ namespace Assembly.UnitTests
         public void ParseFastaFile_ReturnsCorrectSequences()
         {
             var fileReader = new TestFileService();
-            var fastaService = new FastaReader(fileReader);
+            var fastaReader = new FastaReader(fileReader);
 
-            var sequences = fastaService.ParseFastaFile("path").ToList();
+            var sequences = fastaReader.ParseFastaFile("path").ToList();
 
             Assert.Equal(10, sequences.Count);
             Assert.All(sequences, s => Assert.Equal(80, s.Length));
@@ -25,10 +25,10 @@ namespace Assembly.UnitTests
         {
             var fileReader = new TestFileService();
             fileReader.fileLines = new List<string>();
-            var fastaService = new FastaReader(fileReader);
+            var fastaReader = new FastaReader(fileReader);
 
             Assert.Throws<ArgumentException>(() =>
-                fastaService.ParseFastaFile("path").ToList());
+                fastaReader.ParseFastaFile("path").ToList());
 
         }
 
@@ -42,10 +42,10 @@ namespace Assembly.UnitTests
                 "ATCGCTGJGJGNVBCACABJP",
                 "dvdfvdf fsdfs dfsdfsgdf"
             };
-            var fastaService = new FastaReader(fileReader);
+            var fastaReader = new FastaReader(fileReader);
 
             Assert.Throws<ArgumentException>(() =>
-                fastaService.ParseFastaFile("path").ToList());
+                fastaReader.ParseFastaFile("path").ToList());
 
         }
     }

@@ -11,15 +11,19 @@ namespace Assembly.IntegrationTests
     public class ErrorCorrectionTests
     {
 
-        [Fact]
-        public void Correct_RealData()
+        [Theory]
+        [InlineData("TestData/reads0.fasta")]
+        [InlineData("TestData/reads2.fasta")]
+        [InlineData("TestData/reads3.fasta")]
+        public void Correct_RealData(string fastaPath)
         {
+            var assemblyName = "IntegrationTests";
+            var projectPath = Environment.CurrentDirectory.Substring(0, Environment.CurrentDirectory.IndexOf(assemblyName) + assemblyName.Length);
+            fastaPath = Path.Combine(projectPath, fastaPath);
             var kmerLength = 19;
             var corrector = new ErrorCorrector(kmerLength);
-            var fastaService = new FastaReader(new FileService());
-            Console.WriteLine("Enter .fasta file path");
-            var path = Console.ReadLine();
-            var reads = fastaService.ParseFastaFile(path);
+            var fastaReader = new FastaReader(new FileService());
+            var reads = fastaReader.ParseFastaFile(fastaPath);
 
             var histogram = corrector.BuildHistogram(reads);
 

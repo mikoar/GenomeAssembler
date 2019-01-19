@@ -38,7 +38,7 @@ namespace Assembly.DeBruijn
 
                 kmerCount += 1;
 
-                if (kmerCount % 500 == 0)
+                if (kmerCount % 2000 == 0)
                 {
                     Console.WriteLine($"Processed { kmerCount } kmers, { graph.Count } nodes.");
                 }
@@ -48,14 +48,15 @@ namespace Assembly.DeBruijn
             return graph;
         }
 
-        public void ToDot(IFileService fileService, string filePath, Graph graph)
+        public void ToDot(IFileService fileService, string filePath, Graph graph, bool fullLabels = false)
         {
             var content = new StringBuilder();
             content.AppendLine("digraph \"Graph\" {\n  bgcolor=\"transparent\";");
 
             foreach (var node in graph.Nodes)
             {
-                content.AppendLine($"{ node.id } [label=\"{ node.Value.First() + "..." + node.Value.Last() }\"];");
+                var label = fullLabels || node.Value.Length < 5 ? node.Value : node.Value.First() + (node.Value.Length - 2).ToString() + node.Value.Last();
+                content.AppendLine($"{ node.id } [label=\"{ label }\"];");
                 for (int i = 0; i < node.Neighbors.Count; i++)
                 {
                     content.AppendLine($"{node.id } -> { node.Neighbors[i].id } [label=\"{ node.Weights[i] }\"];");

@@ -32,8 +32,18 @@ namespace Assembly.DeBruijn
             _graph.Add(node);
         }
 
+        public void CleanUp()
+        {
+            Simplify();
+            RemoveShortChains();
+            RemoveTips();
+            Simplify();
+        }
+
         public void Simplify()
         {
+            Console.WriteLine($"Merging nodes...");
+            var mergeCount = 0;
             bool merged = true;
 
             while (merged)
@@ -44,34 +54,34 @@ namespace Assembly.DeBruijn
 
                     if (merged)
                     {
+                        mergeCount++;
                         break;
                     }
                 }
             }
-        }
 
-        public void CleanUp()
-        {
-            Simplify();
-            RemoveShortChains();
-            RemoveTips();
-            Simplify();
+            Console.WriteLine($"Merged {mergeCount} times...");
         }
 
         public void RemoveShortChains()
         {
+            Console.WriteLine($"Removing chains shrorter than {_cutoffLength}...");
             var shortChains = _graph
                 .Where(n => n.Value.Length < _cutoffLength)
-                .Where(n => n.TotalIncomingWeight == 0 && n.TotalOutcomingWeight == 0);
+                .Where(n => n.TotalIncomingWeight == 0 && n.TotalOutcomingWeight == 0)
+                .ToArray();
 
             foreach (var node in shortChains)
             {
                 Remove(node);
             }
+
+            Console.WriteLine($"Removed {shortChains.Count()} chains...");
         }
 
         public void RemoveTips()
         {
+            Console.WriteLine("Removing tips...");
             var allFrontTips = _graph
                 .Where(n => n.TotalIncomingWeight == 0)
                 .Where(n => n.Neighbors.Count == 1);
@@ -90,6 +100,8 @@ namespace Assembly.DeBruijn
                 tip.Neighbors.Single().CutPrecedingNode(tip);
                 Remove(tip);
             }
+
+            Console.WriteLine($"Removed {frontTipsToRemove.Count()} tips...");
         }
 
         private bool TryMerge(Node node)

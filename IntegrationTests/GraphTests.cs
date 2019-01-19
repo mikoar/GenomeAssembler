@@ -10,26 +10,34 @@ namespace Assembly.IntegrationTests
 {
     public class GraphTests
     {
-        [Fact]
-        public void BuildGraphAndGenerateDotFile_RealData()
+        [Theory]
+        [InlineData("TestData/reads0.fasta")]
+        [InlineData("TestData/reads2.fasta")]
+        [InlineData("TestData/reads3.fasta")]
+        public void BuildGraphAndGenerateDotFile_RealData(string fastaPath)
         {
+            var assemblyName = "IntegrationTests";
+            var projectPath = Environment.CurrentDirectory.Substring(0, Environment.CurrentDirectory.IndexOf(assemblyName) + assemblyName.Length);
+            fastaPath = Path.Combine(projectPath, fastaPath);
             var fileService = new FileService();
             var kmerLength = 19;
             var errorCorrector = new ErrorCorrector(kmerLength);
-            var fastaService = new FastaReader(fileService);
-            Console.WriteLine("Enter .fasta file path");
-            var fastaPath = Console.ReadLine();
+            var fastaReader = new FastaReader(fileService);
 
-            var reads = fastaService.ParseFastaFile(fastaPath);
-            var histogram = errorCorrector.BuildHistogram(reads);
+            var reads = fastaReader.ParseFastaFile(fastaPath);
+            errorCorrector.BuildHistogram(reads);
             var correctedKmers = errorCorrector.CorrectReadsAndSplitToKmers(reads);
 
-            var graphService = new DeBruijnGraphBuilder(kmerLength, errorCorrector);
-            var graph = graphService.Build(correctedKmers.Select(k => k.ToString()));
+            var graphBuilder = new DeBruijnGraphBuilder(kmerLength, errorCorrector);
+            var graph = graphBuilder.Build(correctedKmers.Select(k => k.ToString()));
             errorCorrector.PrintResult();
 
-            var dotFilePath = Path.Combine(Path.GetDirectoryName(fastaPath), "graphs", Path.GetFileNameWithoutExtension(fastaPath) + ".dot");
-            graphService.ToDot(fileService, dotFilePath, graph);
+            var dotFileDirectory = Path.Combine(Path.GetDirectoryName(fastaPath), "graphs");
+            Directory.CreateDirectory(dotFileDirectory);
+            graphBuilder.ToDot(fileService, Path.Combine(dotFileDirectory, Path.GetFileNameWithoutExtension(fastaPath) + ".dot"), graph);
+
+            graph.CleanUp();
+            graphBuilder.ToDot(fileService, Path.Combine(dotFileDirectory, Path.GetFileNameWithoutExtension(fastaPath) + "_cleaned.dot"), graph);
         }
     }
 }
