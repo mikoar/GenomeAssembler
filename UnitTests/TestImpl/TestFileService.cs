@@ -46,6 +46,11 @@ namespace Assembly.UnitTests
             }
         }
 
+        public void WriteAllLines(string filePath, IEnumerable<string> contents)
+        {
+            WrittenText = string.Join('\n', contents);
+        }
+
         public void WriteAllText(string filePath, string contents)
         {
             WrittenText = contents;

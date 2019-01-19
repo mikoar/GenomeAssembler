@@ -66,6 +66,20 @@ namespace Assembly.DeBruijn
             return node != null && node.Value == Value;
         }
 
+        public bool TryGetPrimaryNeighbor(out Node neighbor)
+        {
+            if (Neighbors.Any())
+            {
+                neighbor = Neighbors[Weights.IndexOf(Weights.Max())];
+                return true;
+            }
+            else
+            {
+                neighbor = null;
+                return false;
+            }
+        }
+
         internal void CutPrecedingNode(Node tip)
         {
             TotalIncomingWeight -= tip.Weights[tip.Neighbors.IndexOf(this)];
@@ -79,5 +93,6 @@ namespace Assembly.DeBruijn
 
         private bool IsStartingNode() =>
             TotalIncomingWeight == 0;
+
     }
 }

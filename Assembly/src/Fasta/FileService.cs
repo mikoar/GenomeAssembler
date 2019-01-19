@@ -11,6 +11,11 @@ namespace Assembly.Fasta
             return File.ReadLines(filePath);
         }
 
+        public void WriteAllLines(string filePath, IEnumerable<string> contents)
+        {
+            File.WriteAllLines(filePath, contents);
+        }
+
         public void WriteAllText(string filePath, string contents)
         {
             File.WriteAllText(filePath, contents);

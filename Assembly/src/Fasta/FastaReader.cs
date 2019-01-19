@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Linq;
 
 namespace Assembly.Fasta
 
@@ -9,11 +9,11 @@ namespace Assembly.Fasta
     public class FastaReader
     {
         public int Count { get; private set; }
-        private readonly IFileService _fileReader;
+        private readonly IFileService _fileService;
 
-        public FastaReader(IFileService fileReader)
+        public FastaReader(IFileService fileService)
         {
-            _fileReader = fileReader;
+            _fileService = fileService;
         }
 
         public IEnumerable<string> ParseFastaFile(string filePath)
@@ -21,7 +21,7 @@ namespace Assembly.Fasta
             var sequence = string.Empty;
             var headerRead = false;
 
-            foreach (var line in _fileReader.ReadLines(filePath))
+            foreach (var line in _fileService.ReadLines(filePath))
             {
                 if (line.StartsWith('>'))
                 {
@@ -50,6 +50,15 @@ namespace Assembly.Fasta
             {
                 throw new ArgumentException("No fasta sequences in file.");
             }
+        }
+
+        public void WriteFastaFile(string filePath, IEnumerable<string> sequences)
+        {
+            string header = "contig";
+            int i = 0;
+            var sequencesWithHeaders = sequences.Select(s => $"{header}{i++}\n{s}");
+            _fileService.WriteAllLines(filePath, sequencesWithHeaders);
+            Console.WriteLine($"Wrote fasta file containing { i } sequences to \"{ filePath }\" ");
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Assembly.DeBruijn.Exceptions;
 
 namespace Assembly.DeBruijn
@@ -102,6 +103,35 @@ namespace Assembly.DeBruijn
             }
 
             Console.WriteLine($"Removed {frontTipsToRemove.Count()} tips...");
+        }
+
+        public IEnumerable<string> GetContigs(int minLength = 300)
+        {
+            var startNodes = _graph.Where(n => n.TotalIncomingWeight == 0);
+            var returned = 0;
+            var rejected = 0;
+            foreach (var startNode in startNodes)
+            {
+                var contig = new StringBuilder();
+                var node = startNode;
+                contig.Append(node.Value);
+                while (node.TryGetPrimaryNeighbor(out node))
+                {
+                    contig.Append(node.Value.Substring(0, K - 2));
+                }
+
+                if (contig.Length >= minLength)
+                {
+                    returned += 1;
+                    yield return contig.ToString();
+                }
+                else
+                {
+                    rejected += 1;
+                }
+            }
+
+            Console.WriteLine($"Assembled {returned} contigs with minimum length of { minLength }. { rejected } contigs were rejected.");
         }
 
         private bool TryMerge(Node node)

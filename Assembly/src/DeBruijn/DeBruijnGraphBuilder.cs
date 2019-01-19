@@ -38,7 +38,7 @@ namespace Assembly.DeBruijn
 
                 kmerCount += 1;
 
-                if (kmerCount % 2000 == 0)
+                if (kmerCount % 10000 == 0)
                 {
                     Console.WriteLine($"Processed { kmerCount } kmers, { graph.Count } nodes.");
                 }

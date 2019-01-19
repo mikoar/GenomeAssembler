@@ -14,7 +14,7 @@ namespace Assembly.IntegrationTests
         [InlineData("TestData/reads0.fasta")]
         [InlineData("TestData/reads2.fasta")]
         [InlineData("TestData/reads3.fasta")]
-        public void BuildGraphAndGenerateDotFile_RealData(string fastaPath)
+        public void BuildGraph_GenerateDotFile_WriteContigs(string fastaPath)
         {
             var assemblyName = "IntegrationTests";
             var projectPath = Environment.CurrentDirectory.Substring(0, Environment.CurrentDirectory.IndexOf(assemblyName) + assemblyName.Length);
@@ -38,6 +38,11 @@ namespace Assembly.IntegrationTests
 
             graph.CleanUp();
             graphBuilder.ToDot(fileService, Path.Combine(dotFileDirectory, Path.GetFileNameWithoutExtension(fastaPath) + "_cleaned.dot"), graph);
+
+            var contigsDirectory = Path.Combine(Path.GetDirectoryName(fastaPath), "contigs");
+            Directory.CreateDirectory(contigsDirectory);
+            var contigs = graph.GetContigs();
+            fastaReader.WriteFastaFile(contigsDirectory, contigs);
         }
     }
 }

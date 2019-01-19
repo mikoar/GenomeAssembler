@@ -6,5 +6,6 @@ namespace Assembly.Fasta
     {
         IEnumerable<string> ReadLines(string filePath);
         void WriteAllText(string filePath, string contents);
+        void WriteAllLines(string filePath, IEnumerable<string> contents);
     }
 }
