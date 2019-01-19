@@ -9,6 +9,7 @@ namespace Assembly.DeBruijn
     {
         private HashSet<Node> _graph;
         public int K { get; private set; }
+        private int _cutoffLength => 2 * K;
 
         public int Count => _graph.Count;
         public IEnumerable<Node> Nodes => _graph.AsEnumerable();
@@ -49,23 +50,71 @@ namespace Assembly.DeBruijn
             }
         }
 
+        public void CleanUp()
+        {
+            Simplify();
+            RemoveShortChains();
+            RemoveTips();
+            Simplify();
+        }
+
+        public void RemoveShortChains()
+        {
+            var shortChains = _graph
+                .Where(n => n.Value.Length < _cutoffLength)
+                .Where(n => n.TotalIncomingWeight == 0 && n.TotalOutcomingWeight == 0);
+
+            foreach (var node in shortChains)
+            {
+                Remove(node);
+            }
+        }
+
+        public void RemoveTips()
+        {
+            var allFrontTips = _graph
+                .Where(n => n.TotalIncomingWeight == 0)
+                .Where(n => n.Neighbors.Count == 1);
+
+            var frontTipsToRemove = allFrontTips
+                .GroupBy(n => n.Neighbors.Single(),
+                    n => n,
+                    (sharedNeighbor, nodes) =>
+                    nodes.OrderByDescending(n => n.TotalOutcomingWeight).Skip(1))
+                .SelectMany(secondaryTips => secondaryTips.AsEnumerable())
+                .Where(secondaryTip => secondaryTip.Value.Length < _cutoffLength)
+                .ToList();
+
+            foreach (var tip in frontTipsToRemove)
+            {
+                tip.Neighbors.Single().CutPrecedingNode(tip);
+                Remove(tip);
+            }
+        }
+
         private bool TryMerge(Node node)
         {
             if (CanBeMergedWithNeighbor(node))
             {
+                Remove(node);
                 var neighbor = node.Neighbors.Single();
                 node.Merge(neighbor, K);
-
-                var removed = _graph.Remove(neighbor);
-                if (!removed)
-                {
-                    throw new GraphException();
-                }
+                Remove(neighbor);
+                _graph.Add(node);
 
                 return true;
             }
 
             return false;
+        }
+
+        private void Remove(Node node)
+        {
+            var removed = _graph.Remove(node);
+            if (!removed)
+            {
+                throw new GraphException("Could not remove node");
+            }
         }
 
         private bool CanBeMergedWithNeighbor(Node node)

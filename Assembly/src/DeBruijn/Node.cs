@@ -50,12 +50,6 @@ namespace Assembly.DeBruijn
             TotalOutcomingWeight = neighbor.TotalOutcomingWeight;
         }
 
-        private void IncrementIncomingEdgesCount() =>
-            TotalIncomingWeight += 1;
-
-        private bool IsStartingNode() =>
-            TotalIncomingWeight == 0;
-
         public override string ToString()
         {
             return Value;
@@ -72,7 +66,18 @@ namespace Assembly.DeBruijn
             return node != null && node.Value == Value;
         }
 
+        internal void CutPrecedingNode(Node tip)
+        {
+            TotalIncomingWeight -= tip.Weights[tip.Neighbors.IndexOf(this)];
+        }
+
         private void IncrementOutcomingEdgesCount() =>
             TotalOutcomingWeight += 1;
+
+        private void IncrementIncomingEdgesCount() =>
+            TotalIncomingWeight += 1;
+
+        private bool IsStartingNode() =>
+            TotalIncomingWeight == 0;
     }
 }
