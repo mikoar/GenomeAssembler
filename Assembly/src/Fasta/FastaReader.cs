@@ -56,7 +56,7 @@ namespace Assembly.Fasta
         {
             string header = "contig";
             int i = 0;
-            var sequencesWithHeaders = sequences.Select(s => $"{header}{i++}\n{s}");
+            var sequencesWithHeaders = sequences.Select(s => $">{header}{i++}\n{s}");
             _fileService.WriteAllLines(filePath, sequencesWithHeaders);
             Console.WriteLine($"Wrote fasta file containing { i } sequences to \"{ filePath }\" ");
         }
