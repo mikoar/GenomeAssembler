@@ -35,7 +35,7 @@ namespace Assembly
 
             try
             {
-                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.ForegroundColor = ConsoleColor.Green;
                 Run();
             }
             catch (System.Exception ex)
@@ -44,6 +44,7 @@ namespace Assembly
                 Console.Write($"An error occured ;_;\n{ex.Message}\n");
                 result = 1;
             }
+
             Console.ResetColor();
 
             return result;

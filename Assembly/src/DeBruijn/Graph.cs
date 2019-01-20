@@ -208,7 +208,7 @@ namespace Assembly.DeBruijn
 
         private bool CanBeMergedWithNeighbor(Node node)
         {
-            return node.Neighbors.Count == 1 && _graph.SelectMany(n => n.Neighbors).Count(n => n == node.Neighbors.Single()) == 1;
+            return node.Neighbors.Count == 1 && node.Neighbors.Single().TotalIncomingWeight == node.TotalOutcomingWeight;
         }
     }
 }

@@ -122,55 +122,66 @@ namespace Assembly.DeBruijn
             return Histogram;
         }
 
+        // public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, int threshold = 1)
+        // {
+        //     if (Histogram == null)
+        //     {
+        //         throw new GraphException("Histogram not built");
+        //     }
+
+        //     string kmer;
+        //     var correctedRead = new StringBuilder();
+        //     int frequency;
+        //     bool newKmerFound;
+        //     CorrectedKmersCount = 0;
+        //     FailedToCorrectKmersCount = 0;
+
+        //     foreach (var read in reads)
+        //     {
+        //         correctedRead.Clear().Append(read);
+
+        //         for (int i = 0; i <= correctedRead.Length - KmerLength; i++)
+        //         {
+        //             kmer = correctedRead.ToString(i, KmerLength);
+
+        //             if (!Histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
+        //             {
+        //                 newKmerFound = false;
+
+        //                 foreach (var newKmer in GenerateNeighbors(kmer))
+        //                 {
+        //                     if (Histogram.TryGetValue(newKmer, out frequency) &&
+        //                         frequency > threshold)
+        //                     {
+        //                         newKmerFound = true;
+        //                         CorrectedKmersCount += 1;
+        //                         correctedRead.Remove(i, KmerLength).Insert(i, newKmer);
+        //                         yield return new KMer(newKmer);
+        //                         break;
+        //                     }
+        //                 }
+
+        //                 if (!newKmerFound)
+        //                 {
+        //                     FailedToCorrectKmersCount += 1;
+        //                     yield return new KMer(kmer);
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 yield return new KMer(kmer);
+        //             }
+        //         }
+        //     }
+        // }
+
         public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, int threshold = 1)
         {
-            if (Histogram == null)
-            {
-                throw new GraphException("Histogram not built");
-            }
-
-            string kmer;
-            var correctedRead = new StringBuilder();
-            int frequency;
-            bool newKmerFound;
-            CorrectedKmersCount = 0;
-            FailedToCorrectKmersCount = 0;
-
             foreach (var read in reads)
             {
-                correctedRead.Clear().Append(read);
-
-                for (int i = 0; i <= correctedRead.Length - KmerLength; i++)
+                for (int i = 0; i <= read.Length - KmerLength; i++)
                 {
-                    kmer = correctedRead.ToString(i, KmerLength);
-
-                    if (!Histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
-                    {
-                        newKmerFound = false;
-
-                        foreach (var newKmer in GenerateNeighbors(kmer))
-                        {
-                            if (Histogram.TryGetValue(newKmer, out frequency) &&
-                                frequency > threshold)
-                            {
-                                newKmerFound = true;
-                                CorrectedKmersCount += 1;
-                                correctedRead.Remove(i, KmerLength).Insert(i, newKmer);
-                                yield return new KMer(newKmer);
-                                break;
-                            }
-                        }
-
-                        if (!newKmerFound)
-                        {
-                            FailedToCorrectKmersCount += 1;
-                            yield return new KMer(kmer);
-                        }
-                    }
-                    else
-                    {
-                        yield return new KMer(kmer);
-                    }
+                    yield return new KMer(read.Substring(i, KmerLength));
                 }
             }
         }
