@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 
-
 namespace Assembly.DeBruijn
 {
     public interface IErrorCorrector

@@ -54,11 +54,11 @@ namespace Assembly
         {
             var fileService = new FileService();
             var kmerLength = K ?? 19;
-            var errorCorrector = new ErrorCorrector(kmerLength);
+            var errorCorrector = new ErrorCorrector(kmerLength, true);
             var fastaReader = new FastaReader(fileService);
 
             var reads = fastaReader.ParseFastaFile(ReadsPath);
-            errorCorrector.BuildHistogram(reads);
+            // errorCorrector.BuildHistogram(reads);
 
             var graphBuilder = new DeBruijnGraphBuilder(kmerLength, errorCorrector);
             var graph = graphBuilder.Build(reads);

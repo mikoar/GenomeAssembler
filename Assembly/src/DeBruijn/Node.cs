@@ -19,8 +19,8 @@ namespace Assembly.DeBruijn
         public List<Node> Neighbors { get; private set; } = new List<Node>();
         public List<int> Weights { get; private set; } = new List<int>();
 
-        public int TotalOutcomingWeight { get; private set; } = 0;
-        public int TotalIncomingWeight { get; private set; } = 0;
+        public int TotalOutcomingWeight { get; set; } = 0;
+        public int TotalIncomingWeight { get; set; } = 0;
 
         public void AddNeighbor(Node to)
         {

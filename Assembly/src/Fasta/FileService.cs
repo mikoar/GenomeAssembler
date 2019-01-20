@@ -8,6 +8,7 @@ namespace Assembly.Fasta
     {
         public IEnumerable<string> ReadLines(string filePath)
         {
+            Console.WriteLine($"Reading {filePath}...");
             return File.ReadLines(filePath);
         }
 

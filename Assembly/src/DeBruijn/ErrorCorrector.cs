@@ -14,8 +14,9 @@ namespace Assembly.DeBruijn
         public int CorrectedKmersCount { get; private set; }
         public int FailedToCorrectKmersCount { get; private set; }
         public Dictionary<string, int> Histogram { get; private set; }
+        private readonly bool _disableCorrection;
 
-        public ErrorCorrector(int kmerLength = 19)
+        public ErrorCorrector(int kmerLength = 19, bool disableCorrection = false)
         {
             KmerLength = kmerLength;
             Alphabet = new char[]
@@ -25,12 +26,14 @@ namespace Assembly.DeBruijn
                 'G',
                 'C'
             };
+            _disableCorrection = disableCorrection;
         }
 
-        public ErrorCorrector(char[] alphabet, int kmerLength = 19)
+        public ErrorCorrector(char[] alphabet, int kmerLength = 19, bool disableCorrection = false)
         {
             KmerLength = kmerLength;
             Alphabet = alphabet;
+            _disableCorrection = disableCorrection;
         }
 
         public IEnumerable<string> GenerateNeighbors(string kmer)
@@ -122,60 +125,70 @@ namespace Assembly.DeBruijn
             return Histogram;
         }
 
-        // public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, int threshold = 1)
-        // {
-        //     if (Histogram == null)
-        //     {
-        //         throw new GraphException("Histogram not built");
-        //     }
-
-        //     string kmer;
-        //     var correctedRead = new StringBuilder();
-        //     int frequency;
-        //     bool newKmerFound;
-        //     CorrectedKmersCount = 0;
-        //     FailedToCorrectKmersCount = 0;
-
-        //     foreach (var read in reads)
-        //     {
-        //         correctedRead.Clear().Append(read);
-
-        //         for (int i = 0; i <= correctedRead.Length - KmerLength; i++)
-        //         {
-        //             kmer = correctedRead.ToString(i, KmerLength);
-
-        //             if (!Histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
-        //             {
-        //                 newKmerFound = false;
-
-        //                 foreach (var newKmer in GenerateNeighbors(kmer))
-        //                 {
-        //                     if (Histogram.TryGetValue(newKmer, out frequency) &&
-        //                         frequency > threshold)
-        //                     {
-        //                         newKmerFound = true;
-        //                         CorrectedKmersCount += 1;
-        //                         correctedRead.Remove(i, KmerLength).Insert(i, newKmer);
-        //                         yield return new KMer(newKmer);
-        //                         break;
-        //                     }
-        //                 }
-
-        //                 if (!newKmerFound)
-        //                 {
-        //                     FailedToCorrectKmersCount += 1;
-        //                     yield return new KMer(kmer);
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 yield return new KMer(kmer);
-        //             }
-        //         }
-        //     }
-        // }
-
         public IEnumerable<KMer> CorrectReadsAndSplitToKmers(IEnumerable<string> reads, int threshold = 1)
+        {
+            if (_disableCorrection)
+            {
+                foreach (var km in SplitToKmers(reads))
+                {
+                    yield return km;
+                }
+            }
+            else
+            {
+                if (Histogram == null)
+                {
+                    throw new GraphException("Histogram not built");
+                }
+
+                string kmer;
+                var correctedRead = new StringBuilder();
+                int frequency;
+                bool newKmerFound;
+                CorrectedKmersCount = 0;
+                FailedToCorrectKmersCount = 0;
+
+                foreach (var read in reads)
+                {
+                    correctedRead.Clear().Append(read);
+
+                    for (int i = 0; i <= correctedRead.Length - KmerLength; i++)
+                    {
+                        kmer = correctedRead.ToString(i, KmerLength);
+
+                        if (!Histogram.TryGetValue(kmer, out frequency) || frequency <= threshold)
+                        {
+                            newKmerFound = false;
+
+                            foreach (var newKmer in GenerateNeighbors(kmer))
+                            {
+                                if (Histogram.TryGetValue(newKmer, out frequency) &&
+                                    frequency > threshold)
+                                {
+                                    newKmerFound = true;
+                                    CorrectedKmersCount += 1;
+                                    correctedRead.Remove(i, KmerLength).Insert(i, newKmer);
+                                    yield return new KMer(newKmer);
+                                    break;
+                                }
+                            }
+
+                            if (!newKmerFound)
+                            {
+                                FailedToCorrectKmersCount += 1;
+                                yield return new KMer(kmer);
+                            }
+                        }
+                        else
+                        {
+                            yield return new KMer(kmer);
+                        }
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<KMer> SplitToKmers(IEnumerable<string> reads)
         {
             foreach (var read in reads)
             {

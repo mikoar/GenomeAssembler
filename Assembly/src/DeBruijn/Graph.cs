@@ -11,14 +11,16 @@ namespace Assembly.DeBruijn
         private HashSet<Node> _graph;
         public int K { get; private set; }
         private int _cutoffLength => 2 * K;
+        private readonly int _minContigLength;
 
         public int Count => _graph.Count;
         public IEnumerable<Node> Nodes => _graph.AsEnumerable();
 
-        public Graph(int k)
+        public Graph(int k, int minContigLength = 300)
         {
             _graph = new HashSet<Node>();
             K = k;
+            _minContigLength = minContigLength;
         }
 
         public Node GetNewOrExistingNode(Node node)
@@ -35,13 +37,61 @@ namespace Assembly.DeBruijn
 
         public void CleanUp()
         {
-            Simplify();
-            RemoveShortChains();
-            RemoveTips();
-            Simplify();
+            var mergeCount = Simplify();
+            do
+            {
+                RemoveLowWeightEdges();
+                // RemoveShortChains();
+                RemoveTips();
+                mergeCount = Simplify();
+
+            } while (mergeCount != 0);
         }
 
-        public void Simplify()
+        ///temporary solution
+        private void RemoveLowWeightEdges()
+        {
+            foreach (var node in _graph)
+            {
+                if (!node.Neighbors.Any())
+                {
+                    continue;
+                }
+
+                var max = node.Weights.Max();
+                var maxWeightEdgesCount = node.Weights.Count(w => w == max);
+
+                if (maxWeightEdgesCount > 1 || max == 1)
+                {
+                    for (int j = 0; j < node.Weights.Count; j++)
+                    {
+                        node.Neighbors[j].TotalIncomingWeight -= node.Weights[j];
+                    }
+
+                    node.Neighbors.Clear();
+                    node.Weights.Clear();
+                    node.TotalOutcomingWeight = 0;
+                }
+                else if (maxWeightEdgesCount == 1)
+                {
+                    var i = node.Weights.IndexOf(max);
+                    for (int j = 0; j < node.Weights.Count; j++)
+                    {
+                        if (i == j) { continue; }
+                        else
+                        {
+                            node.Neighbors[j].TotalIncomingWeight -= node.Weights[j];
+                            node.Neighbors.RemoveAt(j);
+                            node.Weights.RemoveAt(j);
+                        }
+                    }
+
+                    node.TotalOutcomingWeight = max;
+                }
+            }
+        }
+
+        public int Simplify()
         {
             Console.WriteLine($"Merging nodes...");
             var mergeCount = 0;
@@ -62,13 +112,15 @@ namespace Assembly.DeBruijn
             }
 
             Console.WriteLine($"Merged {mergeCount} times...");
+
+            return mergeCount;
         }
 
         public void RemoveShortChains()
         {
-            Console.WriteLine($"Removing chains shrorter than {_cutoffLength}...");
+            Console.WriteLine($"Removing chains shrorter than {_minContigLength}...");
             var shortChains = _graph
-                .Where(n => n.Value.Length < _cutoffLength)
+                .Where(n => n.Value.Length < _minContigLength)
                 .Where(n => n.TotalIncomingWeight == 0 && n.TotalOutcomingWeight == 0)
                 .ToArray();
 
@@ -83,36 +135,11 @@ namespace Assembly.DeBruijn
         public void RemoveTips()
         {
             Console.WriteLine("Removing tips...");
-            RemoveFrontTips();
 
-            // var splittingNodes = _graph
-            //     .Where(n => n.Neighbors.Count > 1);
-
-            // foreach (var splittingNode in splittingNodes)
-            // {
-            //     var maxWeight = splittingNode.Weights.Max();
-
-            //     var neighbors = splittingNode.Neighbors
-            //         .Where(n => n.Value.Length < _cutoffLength);
-
-            //     // var joiningNodes = _graph
-            //     //     .SelectMany(n => n.Neighbors)
-            //     //     .GroupBy(n => n,
-            //     //         n => n,
-            //     //         (sharedNeighbor, nodes) =>
-            //     //         nodes.OrderByDescending(n => n.TotalOutcomingWeight).Skip(1))
-            //     //     .SelectMany(secondaryTips => secondaryTips.AsEnumerable())
-            //     //     .ToList();
-
-            // }
-        }
-
-        private void RemoveFrontTips()
-        {
             var frontTips = _graph
-                .Where(n => n.TotalIncomingWeight == 0)
-                .Where(n => n.Neighbors.Count == 1)
-                .Where(n => n.Value.Length < _cutoffLength);
+                .Except(_graph
+                    .SelectMany(n => n.Neighbors))
+                .Where(n => n.Neighbors.Count == 1);
 
             var frontTipsToRemove = new HashSet<Node>();
 
@@ -126,17 +153,16 @@ namespace Assembly.DeBruijn
                 var neighbor = frontTip.Neighbors.Single();
                 var nodesWithSameNeighbor = _graph
                     .Where(n => n.Neighbors.Contains(neighbor))
-                    .Where(n => n != frontTip);
+                    .Where(n => n.Neighbors.Count == 1)
+                    .OrderByDescending(n => n.Weights.Single());
 
-                if (frontTip.TotalOutcomingWeight < nodesWithSameNeighbor.Max(n => n.TotalOutcomingWeight) ||
-                    (frontTip.TotalOutcomingWeight == nodesWithSameNeighbor.Max(n => n.TotalOutcomingWeight) &&
-                        nodesWithSameNeighbor.All(n => n.TotalIncomingWeight > 0)))
+                foreach (var n in nodesWithSameNeighbor)
                 {
-                    frontTipsToRemove.Add(frontTip);
+                    frontTipsToRemove.Add(n);
                 }
             }
 
-            foreach (var tip in frontTipsToRemove)
+            foreach (var tip in frontTipsToRemove.Distinct())
             {
                 RemoveFrontTip(tip);
             }
@@ -150,9 +176,11 @@ namespace Assembly.DeBruijn
             Remove(tip);
         }
 
-        public IEnumerable<string> GetContigs(int minLength = 300)
+        public IEnumerable<string> GetContigs()
         {
-            var startNodes = _graph.Where(n => n.TotalIncomingWeight == 0);
+            var startNodes = _graph
+                .Except(_graph
+                    .SelectMany(n => n.Neighbors));
             var returned = 0;
             var rejected = 0;
             var totalLength = 0;
@@ -166,7 +194,7 @@ namespace Assembly.DeBruijn
                     contig.Append(node.Value.Substring(0, K - 2));
                 }
 
-                if (contig.Length >= minLength)
+                if (contig.Length >= _minContigLength)
                 {
                     returned += 1;
                     totalLength += contig.Length;
@@ -178,7 +206,7 @@ namespace Assembly.DeBruijn
                 }
             }
 
-            Console.WriteLine($"Assembled {returned} contigs with minimum length of { minLength }. { rejected } contigs were rejected. Total contigs length is { totalLength }.");
+            Console.WriteLine($"Assembled {returned} contigs with minimum length of { _minContigLength }. { rejected } contigs were rejected. Total contigs length is { totalLength }.");
         }
 
         private bool TryMerge(Node node)
@@ -202,7 +230,8 @@ namespace Assembly.DeBruijn
             var removed = _graph.Remove(node);
             if (!removed)
             {
-                throw new GraphException("Could not remove node");
+                //;_;
+                //throw new GraphException("Could not remove node");
             }
         }
 
