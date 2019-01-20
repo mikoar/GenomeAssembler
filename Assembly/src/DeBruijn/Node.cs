@@ -70,7 +70,20 @@ namespace Assembly.DeBruijn
         {
             if (Neighbors.Any())
             {
-                neighbor = Neighbors[Weights.IndexOf(Weights.Max())];
+                var maxWeightNeighbors = new List<Node>();
+                for (int i = 0; i < Weights.Count; i++)
+                {
+                    if (Weights[i] == Weights.Max())
+                    {
+                        maxWeightNeighbors.Add(Neighbors[i]);
+                    }
+                }
+
+                neighbor = maxWeightNeighbors
+                    .OrderByDescending(n => n.TotalOutcomingWeight)
+                    .ThenByDescending(n => n.Value.Length)
+                    .First();
+
                 return true;
             }
             else

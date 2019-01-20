@@ -164,6 +164,7 @@ namespace Assembly.DeBruijn
                         if (!newKmerFound)
                         {
                             FailedToCorrectKmersCount += 1;
+                            yield return new KMer(kmer);
                         }
                     }
                     else

@@ -12,8 +12,11 @@ namespace Assembly.IntegrationTests
     {
         [Theory]
         [InlineData("TestData/reads0.fasta")]
+        [InlineData("TestData/reads1.fasta")]
         [InlineData("TestData/reads2.fasta")]
         [InlineData("TestData/reads3.fasta")]
+        [InlineData("TestData/reads4.fasta")]
+        [InlineData("TestData/reads5.fasta")]
         public void BuildGraph_GenerateDotFile_WriteContigs(string fastaPath)
         {
             var assemblyName = "IntegrationTests";
@@ -26,23 +29,20 @@ namespace Assembly.IntegrationTests
 
             var reads = fastaReader.ParseFastaFile(fastaPath);
             errorCorrector.BuildHistogram(reads);
-            var correctedKmers = errorCorrector.CorrectReadsAndSplitToKmers(reads);
 
             var graphBuilder = new DeBruijnGraphBuilder(kmerLength, errorCorrector);
-            var graph = graphBuilder.Build(correctedKmers.Select(k => k.ToString()));
+            var graph = graphBuilder.Build(reads);
             errorCorrector.PrintResult();
 
+            graph.CleanUp();
             var dotFileDirectory = Path.Combine(Path.GetDirectoryName(fastaPath), "graphs");
             Directory.CreateDirectory(dotFileDirectory);
             graphBuilder.ToDot(fileService, Path.Combine(dotFileDirectory, Path.GetFileNameWithoutExtension(fastaPath) + ".dot"), graph);
 
-            graph.CleanUp();
-            graphBuilder.ToDot(fileService, Path.Combine(dotFileDirectory, Path.GetFileNameWithoutExtension(fastaPath) + "_cleaned.dot"), graph);
-
+            var contigs = graph.GetContigs();
             var contigsDirectory = Path.Combine(Path.GetDirectoryName(fastaPath), "contigs");
             Directory.CreateDirectory(contigsDirectory);
-            var contigs = graph.GetContigs();
-            fastaReader.WriteFastaFile(contigsDirectory, contigs);
+            fastaReader.WriteFastaFile(Path.Combine(contigsDirectory, Path.GetFileNameWithoutExtension(fastaPath) + ".contigs.fasta"), contigs);
         }
     }
 }

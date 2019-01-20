@@ -341,4 +341,6 @@ ASALocalRun/
 healthchecksdb
 
 .cache
-*.dot
+
+contigs/
+graphs/

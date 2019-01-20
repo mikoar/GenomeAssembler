@@ -1,17 +1,24 @@
 ﻿using System;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Assembly
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static int Main(string[] args) =>
+            CommandLineApplication.Execute<Program>(args);
+
+        [Option(CommandOptionType.SingleValue)]
+        public string ReadsPath { get; }
+
+        [Option(CommandOptionType.SingleValue)]
+        public string ContigsPath { get; }
+
+        [Option("-k <K>", "Mer length", CommandOptionType.SingleOrNoValue)]
+        public int K { get; }
+
+        private void OnExecute()
         {
-            if (args.Length != 2)
-            {
-                Console.WriteLine("Contigs assemlber. Usage:");
-                Console.WriteLine($"{ System.Reflection.Assembly.GetExecutingAssembly().GetName().Name } input_reads.fasta output_contigs.fasta");
-                return;
-            }
 
         }
     }

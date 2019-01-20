@@ -40,10 +40,11 @@ namespace Assembly.UnitTests
         }
 
         [Theory]
-        [InlineData(2, "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "zxcvbasdfghjkl")]
-        public void RemoveTips_WithSimplify(int chainsCount, params string[] str)
-        {
-            var k = 4;
+        [InlineData(4, 1, "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "zxcvbasdfghjkl")]
+        [InlineData(4, 1, "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "zxcvbasdfghjkl", "awertyuiop")]
+        [InlineData(4, 1, "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "qwertyuiopasdfghjkl", "zxcvbasdfghjkl", "awertyuiop", "qwertyubnm")]
+        public void RemoveTips_WithSimplify(int k, int chainsCount, params string[] str)
+        {           
             var graphBuilder = new DeBruijnGraphBuilder(k, new TestErrorCorrector(k));
             var graph = graphBuilder.Build(str);
             graph.Simplify();
@@ -56,3 +57,4 @@ namespace Assembly.UnitTests
         }
     }
 }
+

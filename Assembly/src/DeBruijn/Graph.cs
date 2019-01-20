@@ -83,26 +83,71 @@ namespace Assembly.DeBruijn
         public void RemoveTips()
         {
             Console.WriteLine("Removing tips...");
-            var allFrontTips = _graph
-                .Where(n => n.TotalIncomingWeight == 0)
-                .Where(n => n.Neighbors.Count == 1);
+            RemoveFrontTips();
 
-            var frontTipsToRemove = allFrontTips
-                .GroupBy(n => n.Neighbors.Single(),
-                    n => n,
-                    (sharedNeighbor, nodes) =>
-                    nodes.OrderByDescending(n => n.TotalOutcomingWeight).Skip(1))
-                .SelectMany(secondaryTips => secondaryTips.AsEnumerable())
-                .Where(secondaryTip => secondaryTip.Value.Length < _cutoffLength)
-                .ToList();
+            // var splittingNodes = _graph
+            //     .Where(n => n.Neighbors.Count > 1);
+
+            // foreach (var splittingNode in splittingNodes)
+            // {
+            //     var maxWeight = splittingNode.Weights.Max();
+
+            //     var neighbors = splittingNode.Neighbors
+            //         .Where(n => n.Value.Length < _cutoffLength);
+
+            //     // var joiningNodes = _graph
+            //     //     .SelectMany(n => n.Neighbors)
+            //     //     .GroupBy(n => n,
+            //     //         n => n,
+            //     //         (sharedNeighbor, nodes) =>
+            //     //         nodes.OrderByDescending(n => n.TotalOutcomingWeight).Skip(1))
+            //     //     .SelectMany(secondaryTips => secondaryTips.AsEnumerable())
+            //     //     .ToList();
+
+            // }
+        }
+
+        private void RemoveFrontTips()
+        {
+            var frontTips = _graph
+                .Where(n => n.TotalIncomingWeight == 0)
+                .Where(n => n.Neighbors.Count == 1)
+                .Where(n => n.Value.Length < _cutoffLength);
+
+            var frontTipsToRemove = new HashSet<Node>();
+
+            foreach (var frontTip in frontTips)
+            {
+                if (frontTipsToRemove.Contains(frontTip))
+                {
+                    continue;
+                }
+
+                var neighbor = frontTip.Neighbors.Single();
+                var nodesWithSameNeighbor = _graph
+                    .Where(n => n.Neighbors.Contains(neighbor))
+                    .Where(n => n != frontTip);
+
+                if (frontTip.TotalOutcomingWeight < nodesWithSameNeighbor.Max(n => n.TotalOutcomingWeight) ||
+                    (frontTip.TotalOutcomingWeight == nodesWithSameNeighbor.Max(n => n.TotalOutcomingWeight) &&
+                        nodesWithSameNeighbor.All(n => n.TotalIncomingWeight > 0)))
+                {
+                    frontTipsToRemove.Add(frontTip);
+                }
+            }
 
             foreach (var tip in frontTipsToRemove)
             {
-                tip.Neighbors.Single().CutPrecedingNode(tip);
-                Remove(tip);
+                RemoveFrontTip(tip);
             }
 
             Console.WriteLine($"Removed {frontTipsToRemove.Count()} tips...");
+        }
+
+        private void RemoveFrontTip(Node tip)
+        {
+            tip.Neighbors.Single().CutPrecedingNode(tip);
+            Remove(tip);
         }
 
         public IEnumerable<string> GetContigs(int minLength = 300)
@@ -110,6 +155,7 @@ namespace Assembly.DeBruijn
             var startNodes = _graph.Where(n => n.TotalIncomingWeight == 0);
             var returned = 0;
             var rejected = 0;
+            var totalLength = 0;
             foreach (var startNode in startNodes)
             {
                 var contig = new StringBuilder();
@@ -123,6 +169,7 @@ namespace Assembly.DeBruijn
                 if (contig.Length >= minLength)
                 {
                     returned += 1;
+                    totalLength += contig.Length;
                     yield return contig.ToString();
                 }
                 else
@@ -131,7 +178,7 @@ namespace Assembly.DeBruijn
                 }
             }
 
-            Console.WriteLine($"Assembled {returned} contigs with minimum length of { minLength }. { rejected } contigs were rejected.");
+            Console.WriteLine($"Assembled {returned} contigs with minimum length of { minLength }. { rejected } contigs were rejected. Total contigs length is { totalLength }.");
         }
 
         private bool TryMerge(Node node)
